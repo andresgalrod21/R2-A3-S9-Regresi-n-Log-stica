@@ -1,0 +1,63 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
+
+# Parte 1: Carga y exploración de los datos
+# -------------------------------------------------
+# Cargar el archivo CSV con estadísticas de jugadores de fútbol
+data = pd.read_csv(r'football_player_stats.csv')
+
+# Mostrar las primeras filas de los datos para entender su estructura
+print(data.head())
+
+# Mostrar información general del DataFrame, como tipos de datos y valores nulos
+print(data.info())
+
+# Mostrar estadísticas descriptivas (media, desviación estándar, etc.) de las variables numéricas
+print(data.describe())
+
+# Parte 2: Preparación de los datos y escalado
+# -------------------------------------------------
+# Separar las características (variables independientes) de la variable objetivo ('Goals')
+x = data.drop('Goals', axis=1)  # Todas las columnas excepto 'Goals' como variables predictoras
+y = data['Goals']               # 'Goals' como la variable objetivo
+
+# Dividir los datos en conjuntos de entrenamiento (80%) y prueba (20%)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+
+# Normalizar los datos para mejorar el rendimiento del modelo
+scaler = StandardScaler()
+x_train_scaled = scaler.fit_transform(x_train)   # Escalar los datos de entrenamiento
+x_test_scaled = scaler.transform(x_test)         # Escalar los datos de prueba
+
+# Parte 3: Entrenamiento, predicción y evaluación
+# -------------------------------------------------
+# Crear y entrenar un modelo de regresión logística
+logistic_model = LogisticRegression()
+logistic_model.fit(x_train_scaled, y_train)
+
+# Realizar predicciones en el conjunto de prueba
+y_pred = logistic_model.predict(x_test_scaled)
+
+# Generar la matriz de confusión para comparar predicciones con los valores reales
+conf_matrix = confusion_matrix(y_test, y_pred)
+
+# Visualizar la matriz de confusión usando un mapa de calor
+plt.figure(figsize=(8, 6))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', cbar=False)
+plt.xlabel('Predicted')  # Etiqueta para el eje X (Predicciones)
+plt.ylabel('Actual')     # Etiqueta para el eje Y (Valores reales)
+plt.title('Confusion Matrix')  # Título del gráfico
+plt.show()
+
+# Mostrar el reporte de clasificación que incluye precisión, recall y F1-score
+print(classification_report(y_test, y_pred))
+
+# Calcular la exactitud del modelo y mostrarla
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Exactitud del modelo: {accuracy*100:.2f}%')
